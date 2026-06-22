@@ -1,11 +1,9 @@
 import sqlite3
-import json
-import os
-from datetime import datetime
+import calendar as cal_module
 from flask import Flask, request, jsonify, render_template, g
+import os
 
 app = Flask(__name__)
-
 DB_PATH = os.path.join(os.path.dirname(__file__), "kalendar.db")
 
 
@@ -36,6 +34,7 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nazov TEXT NOT NULL,
                 datum TEXT NOT NULL,
+                datum_do TEXT,
                 cas_od TEXT,
                 cas_do TEXT,
                 popis TEXT,
@@ -43,33 +42,35 @@ def init_db():
                 FOREIGN KEY (kolega_id) REFERENCES kolegovia(id)
             );
         """)
-        # seed default colleagues if empty
+        # migrate: add datum_do if missing
+        cols = [r[1] for r in db.execute("PRAGMA table_info(udalosti)").fetchall()]
+        if "datum_do" not in cols:
+            db.execute("ALTER TABLE udalosti ADD COLUMN datum_do TEXT")
+        db.commit()
+
         count = db.execute("SELECT COUNT(*) FROM kolegovia").fetchone()[0]
         if count == 0:
             db.executemany(
                 "INSERT INTO kolegovia (meno, farba) VALUES (?, ?)",
                 [
-                    ("Ján Novák", "#4A90E2"),
-                    ("Mária Kováčová", "#E24A82"),
-                    ("Peter Horváth", "#27AE60"),
+                    ("Ján Novák", "#2563EB"),
+                    ("Mária Kováčová", "#DC2626"),
+                    ("Peter Horváth", "#16A34A"),
                 ],
             )
-        db.commit()
+            db.commit()
 
-
-# ── HTML ──────────────────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
-# ── API: kolegovia ────────────────────────────────────────────────────────────
+# ── kolegovia ─────────────────────────────────────────────────────────────────
 
 @app.route("/api/kolegovia", methods=["GET"])
 def get_kolegovia():
-    db = get_db()
-    rows = db.execute("SELECT * FROM kolegovia ORDER BY meno").fetchall()
+    rows = get_db().execute("SELECT * FROM kolegovia ORDER BY meno").fetchall()
     return jsonify([dict(r) for r in rows])
 
 
@@ -81,10 +82,10 @@ def add_kolega():
     db = get_db()
     cur = db.execute(
         "INSERT INTO kolegovia (meno, farba) VALUES (?, ?)",
-        (data["meno"].strip(), data.get("farba", "#4A90E2")),
+        (data["meno"].strip(), data.get("farba", "#2563EB")),
     )
     db.commit()
-    return jsonify({"id": cur.lastrowid, "meno": data["meno"], "farba": data.get("farba", "#4A90E2")}), 201
+    return jsonify({"id": cur.lastrowid, "meno": data["meno"], "farba": data.get("farba", "#2563EB")}), 201
 
 
 @app.route("/api/kolegovia/<int:kid>", methods=["DELETE"])
@@ -96,7 +97,7 @@ def delete_kolega(kid):
     return jsonify({"ok": True})
 
 
-# ── API: udalosti ─────────────────────────────────────────────────────────────
+# ── udalosti ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/udalosti", methods=["GET"])
 def get_udalosti():
@@ -104,13 +105,16 @@ def get_udalosti():
     mesiac = request.args.get("mesiac")
     db = get_db()
     if rok and mesiac:
-        prefix = f"{int(rok):04d}-{int(mesiac):02d}"
+        r, m = int(rok), int(mesiac)
+        first_day = f"{r:04d}-{m:02d}-01"
+        last_day_num = cal_module.monthrange(r, m)[1]
+        last_day = f"{r:04d}-{m:02d}-{last_day_num:02d}"
         rows = db.execute(
             """SELECT u.*, k.meno as kolega_meno, k.farba as kolega_farba
                FROM udalosti u LEFT JOIN kolegovia k ON u.kolega_id = k.id
-               WHERE u.datum LIKE ?
+               WHERE u.datum <= ? AND COALESCE(u.datum_do, u.datum) >= ?
                ORDER BY u.datum, u.cas_od""",
-            (f"{prefix}%",),
+            (last_day, first_day),
         ).fetchall()
     else:
         rows = db.execute(
@@ -126,12 +130,16 @@ def add_udalost():
     data = request.get_json()
     if not data or not data.get("nazov") or not data.get("datum"):
         return jsonify({"error": "Názov a dátum sú povinné"}), 400
+    datum_do = data.get("datum_do") or None
+    if datum_do and datum_do <= data["datum"]:
+        datum_do = None
     db = get_db()
     cur = db.execute(
-        "INSERT INTO udalosti (nazov, datum, cas_od, cas_do, popis, kolega_id) VALUES (?,?,?,?,?,?)",
+        "INSERT INTO udalosti (nazov, datum, datum_do, cas_od, cas_do, popis, kolega_id) VALUES (?,?,?,?,?,?,?)",
         (
             data["nazov"].strip(),
             data["datum"],
+            datum_do,
             data.get("cas_od") or None,
             data.get("cas_do") or None,
             data.get("popis", "").strip() or None,
@@ -141,8 +149,7 @@ def add_udalost():
     db.commit()
     row = db.execute(
         """SELECT u.*, k.meno as kolega_meno, k.farba as kolega_farba
-           FROM udalosti u LEFT JOIN kolegovia k ON u.kolega_id = k.id
-           WHERE u.id = ?""",
+           FROM udalosti u LEFT JOIN kolegovia k ON u.kolega_id = k.id WHERE u.id=?""",
         (cur.lastrowid,),
     ).fetchone()
     return jsonify(dict(row)), 201
@@ -153,12 +160,16 @@ def update_udalost(uid):
     data = request.get_json()
     if not data:
         return jsonify({"error": "Žiadne dáta"}), 400
+    datum_do = data.get("datum_do") or None
+    if datum_do and datum_do <= data.get("datum", ""):
+        datum_do = None
     db = get_db()
     db.execute(
-        "UPDATE udalosti SET nazov=?, datum=?, cas_od=?, cas_do=?, popis=?, kolega_id=? WHERE id=?",
+        "UPDATE udalosti SET nazov=?, datum=?, datum_do=?, cas_od=?, cas_do=?, popis=?, kolega_id=? WHERE id=?",
         (
             data.get("nazov", "").strip(),
             data.get("datum"),
+            datum_do,
             data.get("cas_od") or None,
             data.get("cas_do") or None,
             data.get("popis", "").strip() or None,
@@ -169,8 +180,7 @@ def update_udalost(uid):
     db.commit()
     row = db.execute(
         """SELECT u.*, k.meno as kolega_meno, k.farba as kolega_farba
-           FROM udalosti u LEFT JOIN kolegovia k ON u.kolega_id = k.id
-           WHERE u.id = ?""",
+           FROM udalosti u LEFT JOIN kolegovia k ON u.kolega_id = k.id WHERE u.id=?""",
         (uid,),
     ).fetchone()
     return jsonify(dict(row))

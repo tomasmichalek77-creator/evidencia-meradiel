@@ -5,405 +5,434 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Plánovač aktivít</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg: #F0F4F8;
-    --card: #FFFFFF;
-    --primary: #3B5BDB;
-    --primary-light: #E8EDFF;
-    --border: #E2E8F0;
-    --text: #1A202C;
-    --muted: #718096;
-    --today: #3B5BDB;
-    --danger: #E53E3E;
-    --radius: 12px;
-    --shadow: 0 2px 8px rgba(0,0,0,.08);
-  }
+:root {
+  --border: #B0B8C4;
+  --border-light: #D8DDE4;
+  --bg: #F3F5F7;
+  --white: #FFFFFF;
+  --text: #1A202C;
+  --muted: #6B7280;
+  --today-bg: #EFF6FF;
+  --today-num-bg: #2563EB;
+  --red: #DC2626;
+  --weekend-stripe: rgba(0,0,0,0.045);
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(0,0,0,.10);
+  --week-col: 46px;
+}
 
-  body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
 
-  /* ── HEADER ── */
-  header {
-    background: var(--primary);
-    color: #fff;
-    padding: 0 24px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 8px rgba(59,91,219,.3);
-  }
-  header h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -.3px; }
-  .header-actions { display: flex; gap: 8px; }
-  .btn-icon {
-    background: rgba(255,255,255,.2);
-    border: none;
-    color: #fff;
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-size: .85rem;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background .15s;
-  }
-  .btn-icon:hover { background: rgba(255,255,255,.35); }
+/* ── HEADER ── */
+header {
+  background: #1E293B;
+  color: #fff;
+  padding: 0 20px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+header h1 { font-size: 1rem; font-weight: 700; white-space: nowrap; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.btn-new {
+  background: #2563EB;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 7px 16px;
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-new:hover { background: #1D4ED8; }
 
-  /* ── LAYOUT ── */
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px 16px;
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 20px;
-  }
-  @media(max-width: 800px) {
-    .container { grid-template-columns: 1fr; }
-    .sidebar { order: -1; }
-  }
+/* ── LAYOUT ── */
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 14px;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 16px;
+}
+@media(max-width: 850px) {
+  .wrap { grid-template-columns: 1fr; }
+  .sidebar { order: -1; }
+}
 
-  /* ── CALENDAR CARD ── */
-  .cal-card {
-    background: var(--card);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
+/* ── CALENDAR CARD ── */
+.cal-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
 
-  .cal-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .cal-nav h2 { font-size: 1.15rem; font-weight: 700; }
-  .nav-btn {
-    width: 34px; height: 34px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .15s;
-  }
-  .nav-btn:hover { background: var(--primary-light); border-color: var(--primary); }
+/* nav */
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--border);
+  background: #F8FAFC;
+}
+.cal-nav h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  color: var(--red);
+  text-transform: uppercase;
+}
+.nav-btn {
+  width: 32px; height: 32px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+  transition: all .12s;
+}
+.nav-btn:hover { border-color: #2563EB; color: #2563EB; }
 
-  .cal-days-header {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-  }
-  .cal-days-header span {
-    text-align: center;
-    font-size: .72rem;
-    font-weight: 700;
-    color: var(--muted);
-    padding: 8px 0;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-  }
-  .cal-days-header span:first-child,
-  .cal-days-header span:last-child { color: #E53E3E; }
+/* day-of-week header */
+.cal-dow-header {
+  display: grid;
+  grid-template-columns: var(--week-col) repeat(7, 1fr);
+  border-bottom: 2px solid var(--border);
+  background: #F8FAFC;
+}
+.dow-spacer { border-right: 2px solid var(--border); }
+.dow-label {
+  text-align: center;
+  font-size: .72rem;
+  font-weight: 800;
+  padding: 6px 2px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-right: 1px solid var(--border-light);
+}
+.dow-label:last-child { border-right: none; }
+.dow-label.weekend { color: var(--red); }
 
-  .cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-  }
+/* ── WEEK BLOCK ── */
+.week-block {
+  display: grid;
+  grid-template-columns: var(--week-col) 1fr;
+  border-bottom: 1px solid var(--border);
+  min-height: 88px;
+}
+.week-block:last-child { border-bottom: none; }
 
-  .cal-cell {
-    min-height: 90px;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 6px;
-    cursor: pointer;
-    transition: background .1s;
-    position: relative;
-  }
-  .cal-cell:nth-child(7n) { border-right: none; }
-  .cal-cell:hover { background: var(--primary-light); }
-  .cal-cell.other-month { background: #F8FAFC; }
-  .cal-cell.other-month .day-num { color: #CBD5E0; }
-  .cal-cell.today { background: #EBF4FF; }
-  .cal-cell.today .day-num {
-    background: var(--today);
-    color: #fff;
-    border-radius: 50%;
-    width: 26px; height: 26px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .cal-cell.weekend .day-num { color: #E53E3E; }
-  .cal-cell.other-month.weekend .day-num { color: #FCA5A5; }
+.week-num-cell {
+  border-right: 2px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  font-size: .7rem;
+  font-weight: 800;
+  color: #94A3B8;
+  letter-spacing: -.3px;
+}
 
-  .day-num {
-    font-size: .8rem;
-    font-weight: 700;
-    color: var(--text);
-    width: 26px; height: 26px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 4px;
-  }
+.week-main {
+  display: flex;
+  flex-direction: column;
+}
 
-  .event-chip {
-    display: block;
-    font-size: .68rem;
-    font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    color: #fff;
-    line-height: 1.4;
-  }
-  .event-chip:hover { opacity: .85; }
-  .more-events {
-    font-size: .65rem;
-    color: var(--muted);
-    padding: 1px 4px;
-    font-weight: 600;
-  }
+/* spanning events area */
+.spanning-area {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 3px 0 0;
+  /* rows set dynamically */
+}
+.spanning-area:empty { display: none; }
 
-  /* ── SIDEBAR ── */
-  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+.span-ev {
+  margin: 1px 2px;
+  border-radius: 3px;
+  font-size: .71rem;
+  font-weight: 700;
+  color: #fff;
+  padding: 2px 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  line-height: 1.5;
+  align-self: center;
+}
+.span-ev:hover { opacity: .85; }
+.span-ev.continues-left { border-radius: 0 3px 3px 0; padding-left: 10px; }
+.span-ev.continues-right { border-radius: 3px 0 0 3px; padding-right: 10px; }
+.span-ev.continues-both { border-radius: 0; }
 
-  .panel {
-    background: var(--card);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-  .panel-header {
-    padding: 12px 16px;
-    font-size: .8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    color: var(--muted);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .panel-body { padding: 12px; }
+/* day cells */
+.days-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  flex: 1;
+}
 
-  /* colleagues */
-  .kolega-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 8px;
-    border-radius: 8px;
-    transition: background .1s;
-  }
-  .kolega-item:hover { background: var(--bg); }
-  .kolega-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .kolega-name { font-size: .88rem; font-weight: 500; flex: 1; }
-  .kolega-del {
-    width: 20px; height: 20px;
-    border: none;
-    background: none;
-    color: #CBD5E0;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: .9rem;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .15s;
-  }
-  .kolega-del:hover { background: #FEE2E2; color: var(--danger); }
+.day-cell {
+  border-right: 1px solid var(--border-light);
+  padding: 4px 4px 4px;
+  cursor: pointer;
+  position: relative;
+  min-height: 60px;
+  transition: background .1s;
+}
+.day-cell:last-child { border-right: none; }
 
-  .add-kolega-form {
-    display: flex;
-    gap: 6px;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-  }
-  .add-kolega-form input[type=text] {
-    flex: 1;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 8px;
-    font-size: .82rem;
-    outline: none;
-    transition: border-color .15s;
-  }
-  .add-kolega-form input[type=text]:focus { border-color: var(--primary); }
-  .add-kolega-form input[type=color] {
-    width: 30px; height: 30px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 2px;
-    cursor: pointer;
-  }
-  .btn-add {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: .82rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity .15s;
-  }
-  .btn-add:hover { opacity: .85; }
+.day-cell.weekend {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--weekend-stripe),
+    var(--weekend-stripe) 4px,
+    transparent 4px,
+    transparent 11px
+  );
+  background-color: #FAFBFC;
+}
+.day-cell.other-month { opacity: .45; }
+.day-cell.today-col { background: var(--today-bg) !important; }
+.day-cell:hover:not(.weekend) { background: #F0F7FF; }
+.day-cell.weekend:hover { background-color: #F0F0F0; }
 
-  /* upcoming events */
-  .upcoming-item {
-    display: flex;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-    align-items: flex-start;
-  }
-  .upcoming-item:last-child { border-bottom: none; }
-  .upcoming-date {
-    text-align: center;
-    min-width: 38px;
-    background: var(--primary-light);
-    border-radius: 8px;
-    padding: 4px 2px;
-  }
-  .upcoming-date .ud-day { font-size: 1rem; font-weight: 800; color: var(--primary); line-height: 1; }
-  .upcoming-date .ud-mon { font-size: .6rem; font-weight: 600; color: var(--primary); text-transform: uppercase; }
-  .upcoming-info { flex: 1; min-width: 0; }
-  .upcoming-title { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .upcoming-meta { font-size: .72rem; color: var(--muted); margin-top: 2px; }
-  .upcoming-color { width: 3px; border-radius: 2px; align-self: stretch; flex-shrink: 0; }
+.day-num-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 3px;
+}
+.day-num {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--muted);
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  line-height: 1;
+}
+.day-cell.weekend .day-num { color: var(--red); }
+.day-cell.today-col .day-num {
+  background: var(--today-num-bg);
+  color: #fff;
+}
+.day-cell.other-month .day-num { color: #CBD5E0; }
 
-  /* ── MODAL ── */
-  .overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.4);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-  .overlay.active { display: flex; }
+/* today red line */
+.day-cell.today-col::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--red);
+}
 
-  .modal {
-    background: var(--card);
-    border-radius: 16px;
-    width: 100%;
-    max-width: 480px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.2);
-    overflow: hidden;
-    animation: slideUp .2s ease;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-  .modal-header {
-    padding: 18px 20px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .modal-header h3 { font-size: 1rem; font-weight: 700; }
-  .modal-close {
-    width: 30px; height: 30px;
-    border: none; background: var(--bg);
-    border-radius: 8px; font-size: 1rem;
-    cursor: pointer; display: flex;
-    align-items: center; justify-content: center;
-  }
-  .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  .modal-footer {
-    padding: 14px 20px;
-    border-top: 1px solid var(--border);
-    display: flex; gap: 8px; justify-content: flex-end;
-  }
+/* single-day events */
+.single-ev {
+  display: block;
+  font-size: .68rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-bottom: 2px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.single-ev:hover { opacity: .82; }
+.more-label {
+  font-size: .63rem;
+  color: var(--muted);
+  padding-left: 3px;
+}
 
-  .form-group { display: flex; flex-direction: column; gap: 5px; }
-  .form-group label { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
-  .form-group input,
-  .form-group textarea,
-  .form-group select {
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 12px;
-    font-size: .9rem;
-    font-family: inherit;
-    outline: none;
-    transition: border-color .15s;
-    color: var(--text);
-  }
-  .form-group input:focus,
-  .form-group textarea:focus,
-  .form-group select:focus { border-color: var(--primary); }
-  .form-group textarea { min-height: 70px; resize: vertical; }
-  .time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* ── SIDEBAR ── */
+.sidebar { display: flex; flex-direction: column; gap: 14px; }
 
-  .btn-primary {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 9px 20px;
-    font-size: .9rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: opacity .15s;
-  }
-  .btn-primary:hover { opacity: .85; }
-  .btn-secondary {
-    background: var(--bg);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 16px;
-    font-size: .9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s;
-  }
-  .btn-secondary:hover { background: var(--border); }
-  .btn-danger {
-    background: #FEE2E2;
-    color: var(--danger);
-    border: none;
-    border-radius: 8px;
-    padding: 9px 16px;
-    font-size: .9rem;
-    font-weight: 700;
-    cursor: pointer;
-    margin-right: auto;
-  }
-  .btn-danger:hover { background: #FECACA; }
+.panel {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+.panel-hdr {
+  padding: 10px 14px;
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border-light);
+  background: #F8FAFC;
+}
+.panel-body { padding: 10px 12px; }
 
-  .kolega-select-opt { display: flex; align-items: center; gap: 6px; }
-  .empty-upcoming { color: var(--muted); font-size: .85rem; text-align: center; padding: 12px 0; }
+.kolega-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px;
+  border-radius: 6px;
+}
+.kolega-row:hover { background: var(--bg); }
+.k-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.k-name { font-size: .86rem; font-weight: 500; flex: 1; }
+.k-del {
+  border: none; background: none; color: #CBD5E0;
+  cursor: pointer; border-radius: 4px; font-size: .85rem;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.k-del:hover { background: #FEE2E2; color: var(--red); }
+
+.add-k-form {
+  display: flex; gap: 6px; margin-top: 8px;
+  padding-top: 8px; border-top: 1px solid var(--border-light);
+}
+.add-k-form input[type=text] {
+  flex: 1; border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 8px; font-size: .82rem; outline: none;
+}
+.add-k-form input[type=text]:focus { border-color: #2563EB; }
+.add-k-form input[type=color] {
+  width: 30px; height: 30px; border: 1px solid var(--border);
+  border-radius: 6px; padding: 2px; cursor: pointer;
+}
+.btn-add {
+  background: #2563EB; color: #fff; border: none;
+  border-radius: 6px; padding: 6px 10px;
+  font-size: .82rem; font-weight: 700; cursor: pointer;
+}
+.btn-add:hover { background: #1D4ED8; }
+
+/* upcoming */
+.upc-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 7px 0; border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+}
+.upc-item:last-child { border-bottom: none; }
+.upc-item:hover { opacity: .8; }
+.upc-bar { width: 3px; border-radius: 2px; align-self: stretch; flex-shrink: 0; }
+.upc-date {
+  min-width: 36px; text-align: center;
+  background: #EFF6FF; border-radius: 6px; padding: 3px 2px;
+}
+.upc-d { font-size: .95rem; font-weight: 800; color: #2563EB; line-height: 1; }
+.upc-m { font-size: .6rem; font-weight: 700; color: #2563EB; text-transform: uppercase; }
+.upc-info { flex: 1; min-width: 0; }
+.upc-title { font-size: .84rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upc-sub { font-size: .71rem; color: var(--muted); margin-top: 1px; }
+.empty-msg { color: var(--muted); font-size: .84rem; text-align: center; padding: 10px 0; }
+
+/* ── MODAL ── */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,.45);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: 14px;
+  width: 100%; max-width: 460px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.22);
+  animation: pop .18s ease;
+}
+@keyframes pop {
+  from { transform: scale(.95) translateY(10px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+.modal-hdr {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-hdr h3 { font-size: .95rem; font-weight: 800; }
+.modal-x {
+  width: 28px; height: 28px; border: none; background: var(--bg);
+  border-radius: 6px; cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center; color: var(--muted);
+}
+.modal-body { padding: 18px; display: flex; flex-direction: column; gap: 13px; }
+.modal-ftr {
+  padding: 12px 18px; border-top: 1px solid var(--border-light);
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+
+.fg { display: flex; flex-direction: column; gap: 4px; }
+.fg label { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.fg input, .fg select, .fg textarea {
+  border: 1.5px solid var(--border);
+  border-radius: 7px; padding: 8px 11px;
+  font-size: .88rem; font-family: inherit;
+  outline: none; color: var(--text);
+  transition: border-color .12s;
+}
+.fg input:focus, .fg select:focus, .fg textarea:focus { border-color: #2563EB; }
+.fg textarea { min-height: 60px; resize: vertical; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.btn-prim {
+  background: #2563EB; color: #fff; border: none;
+  border-radius: 7px; padding: 8px 18px;
+  font-size: .88rem; font-weight: 700; cursor: pointer;
+}
+.btn-prim:hover { background: #1D4ED8; }
+.btn-sec {
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 8px 14px; font-size: .88rem; font-weight: 600; cursor: pointer;
+}
+.btn-sec:hover { background: var(--border-light); }
+.btn-del {
+  background: #FEE2E2; color: var(--red); border: none;
+  border-radius: 7px; padding: 8px 14px;
+  font-size: .88rem; font-weight: 700; cursor: pointer;
+  margin-right: auto;
+}
+.btn-del:hover { background: #FECACA; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>📋 Plánovač pracovných aktivít</h1>
-  <div class="header-actions">
-    <button class="btn-icon" onclick="openNewEvent()">+ Nová udalosť</button>
+  <h1>Plánovač pracovných aktivít</h1>
+  <div class="header-right">
+    <button class="btn-new" onclick="openNew()">+ Nová udalosť</button>
   </div>
 </header>
 
-<div class="container">
+<div class="wrap">
+
   <!-- ── CALENDAR ── -->
   <div class="cal-card">
     <div class="cal-nav">
@@ -411,356 +440,450 @@
       <h2 id="monthTitle"></h2>
       <button class="nav-btn" onclick="changeMonth(1)">›</button>
     </div>
-    <div class="cal-days-header">
-      <span>Po</span><span>Ut</span><span>St</span>
-      <span>Št</span><span>Pi</span><span>So</span><span>Ne</span>
+
+    <div class="cal-dow-header">
+      <div class="dow-spacer"></div>
+      <div class="dow-label">Po</div>
+      <div class="dow-label">Ut</div>
+      <div class="dow-label">St</div>
+      <div class="dow-label">Št</div>
+      <div class="dow-label">Pi</div>
+      <div class="dow-label weekend">So</div>
+      <div class="dow-label weekend">Ne</div>
     </div>
-    <div class="cal-grid" id="calGrid"></div>
+
+    <div id="calBody"></div>
   </div>
 
   <!-- ── SIDEBAR ── -->
   <div class="sidebar">
-    <!-- colleagues panel -->
     <div class="panel">
-      <div class="panel-header">Kolegovia</div>
+      <div class="panel-hdr">Kolegovia</div>
       <div class="panel-body">
-        <div id="kolegovia-list"></div>
-        <div class="add-kolega-form">
-          <input type="text" id="newKolegaMeno" placeholder="Meno kolegu…">
-          <input type="color" id="newKolegaFarba" value="#4A90E2">
+        <div id="kolegList"></div>
+        <div class="add-k-form">
+          <input type="text" id="newMeno" placeholder="Meno…">
+          <input type="color" id="newFarba" value="#2563EB">
           <button class="btn-add" onclick="addKolega()">+</button>
         </div>
       </div>
     </div>
 
-    <!-- upcoming panel -->
     <div class="panel">
-      <div class="panel-header">Najbližšie udalosti</div>
-      <div class="panel-body" id="upcoming-list"></div>
+      <div class="panel-hdr">Najbližšie udalosti</div>
+      <div class="panel-body" id="upcomingList"></div>
     </div>
   </div>
+
 </div>
 
-<!-- ── EVENT MODAL ── -->
-<div class="overlay" id="eventOverlay" onclick="overlayClick(event)">
+<!-- ── MODAL ── -->
+<div class="overlay" id="overlay" onclick="overlayBg(event)">
   <div class="modal">
-    <div class="modal-header">
-      <h3 id="modalTitle">Nová udalosť</h3>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-hdr">
+      <h3 id="mTitle">Nová udalosť</h3>
+      <button class="modal-x" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
+      <div class="fg">
         <label>Názov *</label>
-        <input type="text" id="fNazov" placeholder="Napr. Porada tímu">
+        <input type="text" id="fNazov" placeholder="Napr. Porada, Dovolenka, Servis…">
       </div>
-      <div class="form-group">
-        <label>Dátum *</label>
-        <input type="date" id="fDatum">
+      <div class="row2">
+        <div class="fg">
+          <label>Dátum od *</label>
+          <input type="date" id="fDatum">
+        </div>
+        <div class="fg">
+          <label>Dátum do</label>
+          <input type="date" id="fDatumDo" placeholder="(ak trvá viac dní)">
+        </div>
       </div>
-      <div class="time-row">
-        <div class="form-group">
+      <div class="row2">
+        <div class="fg">
           <label>Čas od</label>
           <input type="time" id="fCasOd">
         </div>
-        <div class="form-group">
+        <div class="fg">
           <label>Čas do</label>
-          <input type="time" id="fCasTo">
+          <input type="time" id="fCasDo">
         </div>
       </div>
-      <div class="form-group">
+      <div class="fg">
         <label>Kolega</label>
         <select id="fKolega">
           <option value="">— nikto —</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="fg">
         <label>Poznámka</label>
         <textarea id="fPopis" placeholder="Voliteľný popis…"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn-danger" id="btnDelete" onclick="deleteEvent()" style="display:none">Vymazať</button>
-      <button class="btn-secondary" onclick="closeModal()">Zrušiť</button>
-      <button class="btn-primary" onclick="saveEvent()">Uložiť</button>
+    <div class="modal-ftr">
+      <button class="btn-del" id="btnDel" onclick="deleteEvent()" style="display:none">Vymazať</button>
+      <button class="btn-sec" onclick="closeModal()">Zrušiť</button>
+      <button class="btn-prim" onclick="saveEvent()">Uložiť</button>
     </div>
   </div>
 </div>
 
 <script>
-const MONTHS_SK = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
-const MONTHS_SK_GEN = ['januára','februára','marca','apríla','mája','júna','júla','augusta','septembra','októbra','novembra','decembra'];
+const MONTHS = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
+const MONTHS3 = ['jan','feb','mar','apr','máj','jún','júl','aug','sep','okt','nov','dec'];
 
-let now = new Date();
-let curYear = now.getFullYear();
-let curMonth = now.getMonth(); // 0-based
-let events = [];
+const today = new Date();
+let curYear  = today.getFullYear();
+let curMonth = today.getMonth();
+let events   = [];
 let kolegovia = [];
-let editingId = null;
+let editId   = null;
 
-// ── DATA ──────────────────────────────────────────────────────────────────────
+// ── helpers ───────────────────────────────────────────────────────────────────
+function ds(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function todayStr() { return ds(today); }
 
+function getISOWeek(d) {
+  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+  const y = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  return Math.ceil((((tmp - y) / 86400000) + 1) / 7);
+}
+
+function getWeeksOfMonth(year, month) {
+  const first = new Date(year, month, 1);
+  let dow = first.getDay(); // 0=Sun
+  if (dow === 0) dow = 7;
+  const monday = new Date(year, month, 2 - dow);
+  const lastDay = new Date(year, month + 1, 0);
+  const weeks = [];
+  let ws = new Date(monday);
+  while (ws <= lastDay) {
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(ws);
+      d.setDate(ws.getDate() + i);
+      week.push(d);
+    }
+    weeks.push(week);
+    ws.setDate(ws.getDate() + 7);
+  }
+  return weeks;
+}
+
+function assignTracks(evList) {
+  const sorted = [...evList].sort((a,b) => a.datum.localeCompare(b.datum));
+  const trackEnds = [];
+  const res = [];
+  for (const ev of sorted) {
+    const end = ev.datum_do || ev.datum;
+    let t = trackEnds.findIndex(e => e < ev.datum);
+    if (t === -1) { t = trackEnds.length; trackEnds.push(null); }
+    trackEnds[t] = end;
+    res.push({...ev, track: t});
+  }
+  return { items: res, numTracks: trackEnds.length };
+}
+
+// ── fetch ─────────────────────────────────────────────────────────────────────
 async function fetchKolegovia() {
-  const res = await fetch('/api/kolegovia');
-  kolegovia = await res.json();
+  const r = await fetch('/api/kolegovia');
+  kolegovia = await r.json();
   renderKolegovia();
-  populateKolegaSelect();
+  rebuildKolegaSelect();
 }
 
 async function fetchEvents() {
-  const res = await fetch(`/api/udalosti?rok=${curYear}&mesiac=${curMonth + 1}`);
-  events = await res.json();
-  renderCalendar();
+  const r = await fetch(`/api/udalosti?rok=${curYear}&mesiac=${curMonth+1}`);
+  events = await r.json();
+  renderCal();
   renderUpcoming();
 }
 
-// ── RENDER CALENDAR ───────────────────────────────────────────────────────────
+// ── render calendar ───────────────────────────────────────────────────────────
+function renderCal() {
+  document.getElementById('monthTitle').textContent = `${MONTHS[curMonth]} ${curYear}`;
+  const body = document.getElementById('calBody');
+  body.innerHTML = '';
 
-function renderCalendar() {
-  const title = document.getElementById('monthTitle');
-  title.textContent = `${MONTHS_SK[curMonth]} ${curYear}`;
+  const weeks = getWeeksOfMonth(curYear, curMonth);
+  const tStr  = todayStr();
 
-  const grid = document.getElementById('calGrid');
-  grid.innerHTML = '';
-
-  // first day of month (adjust Mon=0)
-  const first = new Date(curYear, curMonth, 1);
-  let startDow = first.getDay(); // 0=Sun
-  startDow = startDow === 0 ? 6 : startDow - 1; // Mon-based
-
-  const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
-  const daysInPrev  = new Date(curYear, curMonth, 0).getDate();
-  const todayStr = toDateStr(now);
-
-  // events by date
+  // index events by date for quick lookup
   const byDate = {};
-  events.forEach(e => {
-    (byDate[e.datum] = byDate[e.datum] || []).push(e);
+  events.forEach(ev => {
+    // single-day
+    if (!ev.datum_do || ev.datum_do === ev.datum) {
+      (byDate[ev.datum] = byDate[ev.datum] || []).push(ev);
+    }
+    // multi-day events are handled per-week below
   });
 
-  const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
+  const multiDay = events.filter(ev => ev.datum_do && ev.datum_do > ev.datum);
 
-  for (let i = 0; i < totalCells; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cal-cell';
+  weeks.forEach(week => {
+    const wStart = ds(week[0]);
+    const wEnd   = ds(week[6]);
 
-    let date, isOther = false;
-    if (i < startDow) {
-      date = new Date(curYear, curMonth - 1, daysInPrev - startDow + i + 1);
-      isOther = true;
-    } else if (i >= startDow + daysInMonth) {
-      date = new Date(curYear, curMonth + 1, i - startDow - daysInMonth + 1);
-      isOther = true;
-    } else {
-      date = new Date(curYear, curMonth, i - startDow + 1);
+    // find multi-day events overlapping this week
+    const overlapping = multiDay.filter(ev => ev.datum <= wEnd && ev.datum_do >= wStart);
+    const { items: tracked, numTracks } = assignTracks(overlapping);
+
+    const block = document.createElement('div');
+    block.className = 'week-block';
+
+    // week number
+    const wn = document.createElement('div');
+    wn.className = 'week-num-cell';
+    wn.textContent = getISOWeek(week[0]);
+    block.appendChild(wn);
+
+    // week main
+    const main = document.createElement('div');
+    main.className = 'week-main';
+
+    // spanning area
+    if (numTracks > 0) {
+      const sa = document.createElement('div');
+      sa.className = 'spanning-area';
+      sa.style.gridTemplateRows = `repeat(${numTracks}, 20px)`;
+      sa.style.height = (numTracks * 22 + 4) + 'px';
+
+      tracked.forEach(ev => {
+        const evStart = ev.datum > wStart ? ev.datum : wStart;
+        const evEnd   = ev.datum_do < wEnd ? ev.datum_do : wEnd;
+
+        const colStart = week.findIndex(d => ds(d) === evStart);
+        const colEnd   = week.findIndex(d => ds(d) === evEnd);
+        if (colStart === -1 || colEnd === -1) return;
+
+        const chip = document.createElement('div');
+        chip.className = 'span-ev';
+        const cl = ev.datum < wStart, cr = ev.datum_do > wEnd;
+        if (cl && cr) chip.classList.add('continues-both');
+        else if (cl)  chip.classList.add('continues-left');
+        else if (cr)  chip.classList.add('continues-right');
+
+        chip.style.gridColumn = `${colStart+1} / ${colEnd+2}`;
+        chip.style.gridRow    = ev.track + 1;
+        chip.style.background = ev.kolega_farba || '#6B7280';
+        chip.textContent = (cl ? '◂ ' : '') + ev.nazov + (cr ? ' ▸' : '');
+        chip.onclick = e => { e.stopPropagation(); openEdit(ev); };
+        sa.appendChild(chip);
+      });
+
+      main.appendChild(sa);
     }
 
-    const ds = toDateStr(date);
-    const dow = date.getDay();
-    const isWeekend = dow === 0 || dow === 6;
-    const isToday = ds === todayStr;
+    // days row
+    const dr = document.createElement('div');
+    dr.className = 'days-row';
 
-    if (isOther) cell.classList.add('other-month');
-    if (isToday) cell.classList.add('today');
-    if (isWeekend) cell.classList.add('weekend');
+    week.forEach((d, idx) => {
+      const dStr = ds(d);
+      const isOther   = d.getMonth() !== curMonth;
+      const isWeekend = idx >= 5; // So=5, Ne=6
+      const isToday   = dStr === tStr;
 
-    const dayNum = document.createElement('div');
-    dayNum.className = 'day-num';
-    dayNum.textContent = date.getDate();
-    cell.appendChild(dayNum);
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+      if (isWeekend) cell.classList.add('weekend');
+      if (isOther)   cell.classList.add('other-month');
+      if (isToday)   cell.classList.add('today-col');
 
-    const dayEvents = byDate[ds] || [];
-    const maxShow = 3;
-    dayEvents.slice(0, maxShow).forEach(ev => {
-      const chip = document.createElement('span');
-      chip.className = 'event-chip';
-      chip.style.background = ev.kolega_farba || '#718096';
-      chip.textContent = (ev.cas_od ? ev.cas_od.slice(0,5) + ' ' : '') + ev.nazov;
-      chip.onclick = e => { e.stopPropagation(); openEditEvent(ev); };
-      cell.appendChild(chip);
+      const numWrap = document.createElement('div');
+      numWrap.className = 'day-num-wrap';
+      const num = document.createElement('span');
+      num.className = 'day-num';
+      // show "1 jan" on first of month
+      if (d.getDate() === 1 && !isOther) {
+        num.textContent = `1`;
+        num.title = MONTHS[d.getMonth()];
+      } else {
+        num.textContent = d.getDate();
+      }
+      numWrap.appendChild(num);
+      cell.appendChild(numWrap);
+
+      // single-day events
+      const dayEvs = (byDate[dStr] || []);
+      const maxShow = 3;
+      dayEvs.slice(0, maxShow).forEach(ev => {
+        const chip = document.createElement('span');
+        chip.className = 'single-ev';
+        chip.style.background = ev.kolega_farba || '#6B7280';
+        chip.textContent = (ev.cas_od ? ev.cas_od.slice(0,5)+' ' : '') + ev.nazov;
+        chip.onclick = e => { e.stopPropagation(); openEdit(ev); };
+        cell.appendChild(chip);
+      });
+      if (dayEvs.length > maxShow) {
+        const m = document.createElement('span');
+        m.className = 'more-label';
+        m.textContent = `+${dayEvs.length - maxShow} ďalšie`;
+        cell.appendChild(m);
+      }
+
+      cell.onclick = () => openNew(dStr);
+      dr.appendChild(cell);
     });
-    if (dayEvents.length > maxShow) {
-      const more = document.createElement('span');
-      more.className = 'more-events';
-      more.textContent = `+${dayEvents.length - maxShow} ďalšie`;
-      cell.appendChild(more);
-    }
 
-    cell.onclick = () => openNewEvent(ds);
-    grid.appendChild(cell);
-  }
+    main.appendChild(dr);
+    block.appendChild(main);
+    body.appendChild(block);
+  });
 }
 
-// ── RENDER SIDEBAR ────────────────────────────────────────────────────────────
-
+// ── sidebar ───────────────────────────────────────────────────────────────────
 function renderKolegovia() {
-  const list = document.getElementById('kolegovia-list');
+  const list = document.getElementById('kolegList');
   list.innerHTML = '';
   kolegovia.forEach(k => {
-    const item = document.createElement('div');
-    item.className = 'kolega-item';
-    item.innerHTML = `
-      <span class="kolega-dot" style="background:${k.farba}"></span>
-      <span class="kolega-name">${k.meno}</span>
-      <button class="kolega-del" onclick="removeKolega(${k.id})" title="Odstrániť">✕</button>`;
-    list.appendChild(item);
+    const row = document.createElement('div');
+    row.className = 'kolega-row';
+    row.innerHTML = `
+      <span class="k-dot" style="background:${k.farba}"></span>
+      <span class="k-name">${k.meno}</span>
+      <button class="k-del" onclick="removeKolega(${k.id})">✕</button>`;
+    list.appendChild(row);
   });
 }
 
 function renderUpcoming() {
-  const list = document.getElementById('upcoming-list');
+  const list = document.getElementById('upcomingList');
   list.innerHTML = '';
-  const todayStr = toDateStr(now);
-  const upcoming = events
-    .filter(e => e.datum >= todayStr)
-    .sort((a,b) => (a.datum+a.cas_od||'').localeCompare(b.datum+b.cas_od||''))
-    .slice(0, 6);
+  const t = todayStr();
+  const soon = events
+    .filter(ev => (ev.datum_do || ev.datum) >= t)
+    .sort((a,b) => a.datum.localeCompare(b.datum))
+    .slice(0, 7);
 
-  if (!upcoming.length) {
-    list.innerHTML = '<p class="empty-upcoming">Žiadne nadchádzajúce udalosti</p>';
+  if (!soon.length) {
+    list.innerHTML = '<p class="empty-msg">Žiadne nadchádzajúce udalosti</p>';
     return;
   }
-
-  upcoming.forEach(ev => {
+  soon.forEach(ev => {
     const d = new Date(ev.datum + 'T12:00:00');
     const item = document.createElement('div');
-    item.className = 'upcoming-item';
+    item.className = 'upc-item';
+    const timeStr = ev.cas_od ? ev.cas_od.slice(0,5) + (ev.cas_do ? '–'+ev.cas_do.slice(0,5) : '') : '';
+    const rangeStr = ev.datum_do ? `${d.getDate()}. ${MONTHS3[d.getMonth()]} – ${new Date(ev.datum_do+'T12:00:00').getDate()}. ${MONTHS3[new Date(ev.datum_do+'T12:00:00').getMonth()]}` : '';
     item.innerHTML = `
-      <div class="upcoming-color" style="background:${ev.kolega_farba||'#CBD5E0'}"></div>
-      <div class="upcoming-date">
-        <div class="ud-day">${d.getDate()}</div>
-        <div class="ud-mon">${MONTHS_SK[d.getMonth()].slice(0,3)}</div>
+      <div class="upc-bar" style="background:${ev.kolega_farba||'#CBD5E0'}"></div>
+      <div class="upc-date">
+        <div class="upc-d">${d.getDate()}</div>
+        <div class="upc-m">${MONTHS3[d.getMonth()]}</div>
       </div>
-      <div class="upcoming-info">
-        <div class="upcoming-title">${ev.nazov}</div>
-        <div class="upcoming-meta">${ev.cas_od ? ev.cas_od.slice(0,5) + (ev.cas_to ? '–'+ev.cas_to.slice(0,5) : '') + ' · ' : ''}${ev.kolega_meno||'—'}</div>
+      <div class="upc-info">
+        <div class="upc-title">${ev.nazov}</div>
+        <div class="upc-sub">${rangeStr || timeStr || ''}${(rangeStr||timeStr) && ev.kolega_meno ? ' · ' : ''}${ev.kolega_meno||''}</div>
       </div>`;
-    item.onclick = () => openEditEvent(ev);
-    item.style.cursor = 'pointer';
+    item.onclick = () => openEdit(ev);
     list.appendChild(item);
   });
 }
 
-function populateKolegaSelect() {
+function rebuildKolegaSelect() {
   const sel = document.getElementById('fKolega');
   const cur = sel.value;
   sel.innerHTML = '<option value="">— nikto —</option>';
   kolegovia.forEach(k => {
-    const opt = document.createElement('option');
-    opt.value = k.id;
-    opt.textContent = k.meno;
-    sel.appendChild(opt);
+    const o = document.createElement('option');
+    o.value = k.id; o.textContent = k.meno;
+    sel.appendChild(o);
   });
   if (cur) sel.value = cur;
 }
 
-// ── MODAL ─────────────────────────────────────────────────────────────────────
-
-function openNewEvent(dateStr) {
-  editingId = null;
-  document.getElementById('modalTitle').textContent = 'Nová udalosť';
+// ── modal ─────────────────────────────────────────────────────────────────────
+function openNew(dateStr) {
+  editId = null;
+  document.getElementById('mTitle').textContent = 'Nová udalosť';
   document.getElementById('fNazov').value = '';
-  document.getElementById('fDatum').value = dateStr || toDateStr(now);
+  document.getElementById('fDatum').value = dateStr || ds(today);
+  document.getElementById('fDatumDo').value = '';
   document.getElementById('fCasOd').value = '';
-  document.getElementById('fCasTo').value = '';
+  document.getElementById('fCasDo').value = '';
   document.getElementById('fKolega').value = '';
   document.getElementById('fPopis').value = '';
-  document.getElementById('btnDelete').style.display = 'none';
-  document.getElementById('eventOverlay').classList.add('active');
-  setTimeout(() => document.getElementById('fNazov').focus(), 50);
+  document.getElementById('btnDel').style.display = 'none';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('fNazov').focus(), 60);
 }
 
-function openEditEvent(ev) {
-  editingId = ev.id;
-  document.getElementById('modalTitle').textContent = 'Upraviť udalosť';
+function openEdit(ev) {
+  editId = ev.id;
+  document.getElementById('mTitle').textContent = 'Upraviť udalosť';
   document.getElementById('fNazov').value = ev.nazov;
   document.getElementById('fDatum').value = ev.datum;
+  document.getElementById('fDatumDo').value = ev.datum_do || '';
   document.getElementById('fCasOd').value = ev.cas_od || '';
-  document.getElementById('fCasTo').value = ev.cas_do || '';
+  document.getElementById('fCasDo').value = ev.cas_do || '';
   document.getElementById('fKolega').value = ev.kolega_id || '';
   document.getElementById('fPopis').value = ev.popis || '';
-  document.getElementById('btnDelete').style.display = 'block';
-  document.getElementById('eventOverlay').classList.add('active');
+  document.getElementById('btnDel').style.display = 'block';
+  document.getElementById('overlay').classList.add('open');
 }
 
-function closeModal() {
-  document.getElementById('eventOverlay').classList.remove('active');
-}
-
-function overlayClick(e) {
-  if (e.target === document.getElementById('eventOverlay')) closeModal();
-}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function overlayBg(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
 
 async function saveEvent() {
   const nazov = document.getElementById('fNazov').value.trim();
-  const datum = document.getElementById('fDatum').value;
-  if (!nazov || !datum) { alert('Vyplňte názov a dátum.'); return; }
-
+  const datum  = document.getElementById('fDatum').value;
+  if (!nazov || !datum) { alert('Vyplňte aspoň názov a dátum.'); return; }
   const payload = {
-    nazov,
-    datum,
-    cas_od: document.getElementById('fCasOd').value || null,
-    cas_do: document.getElementById('fCasTo').value || null,
-    kolega_id: document.getElementById('fKolega').value ? parseInt(document.getElementById('fKolega').value) : null,
-    popis: document.getElementById('fPopis').value.trim() || null,
+    nazov, datum,
+    datum_do: document.getElementById('fDatumDo').value || null,
+    cas_od:   document.getElementById('fCasOd').value || null,
+    cas_do:   document.getElementById('fCasDo').value || null,
+    kolega_id: document.getElementById('fKolega').value ? +document.getElementById('fKolega').value : null,
+    popis:    document.getElementById('fPopis').value.trim() || null,
   };
-
-  if (editingId) {
-    await fetch(`/api/udalosti/${editingId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-  } else {
-    await fetch('/api/udalosti', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-  }
+  const url = editId ? `/api/udalosti/${editId}` : '/api/udalosti';
+  const method = editId ? 'PUT' : 'POST';
+  await fetch(url, { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
   closeModal();
   fetchEvents();
 }
 
 async function deleteEvent() {
-  if (!editingId) return;
-  if (!confirm('Vymazať túto udalosť?')) return;
-  await fetch(`/api/udalosti/${editingId}`, { method:'DELETE' });
+  if (!editId || !confirm('Vymazať túto udalosť?')) return;
+  await fetch(`/api/udalosti/${editId}`, { method:'DELETE' });
   closeModal();
   fetchEvents();
 }
 
-// ── COLLEAGUES ────────────────────────────────────────────────────────────────
-
+// ── kolegovia ─────────────────────────────────────────────────────────────────
 async function addKolega() {
-  const meno = document.getElementById('newKolegaMeno').value.trim();
-  const farba = document.getElementById('newKolegaFarba').value;
+  const meno = document.getElementById('newMeno').value.trim();
   if (!meno) return;
+  const farba = document.getElementById('newFarba').value;
   await fetch('/api/kolegovia', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({meno, farba}) });
-  document.getElementById('newKolegaMeno').value = '';
+  document.getElementById('newMeno').value = '';
   await fetchKolegovia();
   fetchEvents();
 }
 
 async function removeKolega(id) {
-  if (!confirm('Odstrániť kolegu? Udalosti zostanú, ale bez priradenenia.')) return;
+  if (!confirm('Odstrániť kolegu?')) return;
   await fetch(`/api/kolegovia/${id}`, { method:'DELETE' });
   await fetchKolegovia();
   fetchEvents();
 }
 
-// ── NAV ───────────────────────────────────────────────────────────────────────
-
-function changeMonth(delta) {
-  curMonth += delta;
+// ── nav ───────────────────────────────────────────────────────────────────────
+function changeMonth(d) {
+  curMonth += d;
   if (curMonth < 0)  { curMonth = 11; curYear--; }
   if (curMonth > 11) { curMonth = 0;  curYear++; }
   fetchEvents();
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-function toDateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-
-// keyboard
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
-});
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
+// ── init ──────────────────────────────────────────────────────────────────────
 fetchKolegovia().then(fetchEvents);
 </script>
 </body>
