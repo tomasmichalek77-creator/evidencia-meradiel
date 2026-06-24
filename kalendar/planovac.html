@@ -36,10 +36,17 @@ header h1 { font-size: .88rem; font-weight: 700; white-space: nowrap; }
 .pbody { padding: 8px 10px; }
 
 /* legend */
-.leg-item { display: flex; align-items: center; gap: 6px; padding: 3px 4px; font-size: .78rem; border-radius: 4px; }
+.leg-item { display: flex; align-items: center; gap: 6px; padding: 5px 7px; font-size: .78rem; border-radius: 6px; cursor: grab; user-select: none; transition: background .1s, transform .1s; }
+.leg-item:hover { background: #EFF6FF; }
+.leg-item:active { cursor: grabbing; transform: scale(.97); }
+.leg-item.dragging { opacity: .5; }
+.leg-hint { font-size: .6rem; color: #94A3B8; padding: 3px 7px 5px; }
 .leg-icon { font-size: .95rem; width: 20px; text-align: center; }
 .leg-label { flex: 1; }
 .leg-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+
+/* drag-over highlight on calendar cell */
+.day-cell.drag-over { background: #DBEAFE !important; outline: 2px dashed var(--blue); outline-offset: -2px; }
 
 /* kolegovia */
 .k-row { display: flex; align-items: center; gap: 6px; padding: 4px 3px; border-radius: 5px; }
@@ -319,7 +326,7 @@ function nextId(arr){ return arr.length?Math.max(...arr.map(x=>x.id))+1:1; }
 const today=new Date();
 let curY=today.getFullYear(), curM=today.getMonth();
 let events=loadEvents(), kolegovia=loadKolegovia();
-let editId=null, selTyp=null, selPersonIds=[];
+let editId=null, selTyp=null, selPersonIds=[], dragTypId=null;
 
 // migrate old kolegaId -> kolegaIds
 events = events.map(ev=>{
@@ -457,6 +464,10 @@ function render(){
         if(rest>0){const m=document.createElement('span');m.className='more-lbl';m.textContent=`+${rest}`;cell.appendChild(m);}
       }
       cell.onclick=()=>openNew(dStr);
+      // drag & drop — pretiahnuť typ na deň
+      cell.ondragover=e=>{ e.preventDefault(); e.dataTransfer.dropEffect='copy'; cell.classList.add('drag-over'); };
+      cell.ondragleave=()=>cell.classList.remove('drag-over');
+      cell.ondrop=e=>{ e.preventDefault(); cell.classList.remove('drag-over'); const tid=e.dataTransfer.getData('text/plain')||dragTypId; if(tid) openNewWithTyp(tid, dStr); };
       dr.appendChild(cell);
     });
     wm.appendChild(dr); blk.appendChild(wm); body.appendChild(blk);
@@ -466,12 +477,20 @@ function render(){
 }
 
 function renderSidebar(){
-  // legend
+  // legend — kliknutie otvori formular, drag & drop na den
   const leg=document.getElementById('legendList');
   leg.innerHTML='';
+  const hint=document.createElement('div'); hint.className='leg-hint'; hint.textContent='Klikni alebo presuň na deň →';
+  leg.appendChild(hint);
   TYPY.forEach(t=>{
-    const row=document.createElement('div'); row.className='leg-item';
+    const row=document.createElement('div'); row.className='leg-item'; row.title='Klikni pre nový záznam, alebo presuň na konkrétny deň';
     row.innerHTML=`<span class="leg-icon">${t.ikona}</span><span class="leg-label">${t.label.replace('\n',' ')}</span><span class="leg-dot" style="background:${t.farba}"></span>`;
+    // klik = otvor formular s predvolenym typom
+    row.onclick=()=>openNewWithTyp(t.id, null);
+    // drag start
+    row.draggable=true;
+    row.ondragstart=e=>{ dragTypId=t.id; e.dataTransfer.effectAllowed='copy'; e.dataTransfer.setData('text/plain', t.id); row.classList.add('dragging'); };
+    row.ondragend=()=>{ dragTypId=null; row.classList.remove('dragging'); };
     leg.appendChild(row);
   });
   // kolegovia
@@ -526,6 +545,11 @@ function selectTyp(id){
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
+function openNewWithTyp(typId, dateStr){
+  openNew(dateStr);
+  selectTyp(typId);
+}
+
 function openNew(dateStr){
   editId=null; selTyp=null; selPersonIds=[];
   document.getElementById('mT').textContent='Nová udalosť';
