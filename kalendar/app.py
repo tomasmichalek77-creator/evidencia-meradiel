@@ -1,5 +1,5 @@
+import json
 import sqlite3
-import calendar as cal_module
 from flask import Flask, request, jsonify, render_template, g
 import os
 
@@ -30,35 +30,117 @@ def init_db():
                 meno TEXT NOT NULL,
                 farba TEXT NOT NULL DEFAULT '#4A90E2'
             );
-            CREATE TABLE IF NOT EXISTS udalosti (
+            CREATE TABLE IF NOT EXISTS zakaznici (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nazov TEXT NOT NULL,
+                ico TEXT
+            );
+            CREATE TABLE IF NOT EXISTS meradla (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nazov TEXT NOT NULL,
+                inv TEXT
+            );
+            CREATE TABLE IF NOT EXISTS udalosti (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                typ TEXT,
+                nazov TEXT,
                 datum TEXT NOT NULL,
                 datum_do TEXT,
                 cas_od TEXT,
                 cas_do TEXT,
+                kolega_ids TEXT DEFAULT '[]',
+                zakaznik_id INTEGER,
+                meradla_ids TEXT DEFAULT '[]',
+                auto_znacka TEXT,
+                auto_spz TEXT,
+                dohlad_typ TEXT,
+                miesto TEXT,
                 popis TEXT,
-                kolega_id INTEGER,
-                FOREIGN KEY (kolega_id) REFERENCES kolegovia(id)
+                FOREIGN KEY (zakaznik_id) REFERENCES zakaznici(id)
             );
         """)
-        # migrate: add datum_do if missing
-        cols = [r[1] for r in db.execute("PRAGMA table_info(udalosti)").fetchall()]
-        if "datum_do" not in cols:
-            db.execute("ALTER TABLE udalosti ADD COLUMN datum_do TEXT")
+
+        # column migrations for existing databases
+        cols = {r[1] for r in db.execute("PRAGMA table_info(udalosti)").fetchall()}
+        for col, col_type in [
+            ("typ", "TEXT"),
+            ("kolega_ids", "TEXT DEFAULT '[]'"),
+            ("zakaznik_id", "INTEGER"),
+            ("meradla_ids", "TEXT DEFAULT '[]'"),
+            ("auto_znacka", "TEXT"),
+            ("auto_spz", "TEXT"),
+            ("dohlad_typ", "TEXT"),
+            ("miesto", "TEXT"),
+        ]:
+            if col not in cols:
+                db.execute(f"ALTER TABLE udalosti ADD COLUMN {col} {col_type}")
+
+        # migrate single kolega_id -> kolega_ids JSON array
+        if "kolega_id" in cols:
+            db.execute("""
+                UPDATE udalosti
+                SET kolega_ids = json_array(kolega_id)
+                WHERE kolega_id IS NOT NULL
+                  AND (kolega_ids IS NULL OR kolega_ids = '[]')
+            """)
+
         db.commit()
 
-        count = db.execute("SELECT COUNT(*) FROM kolegovia").fetchone()[0]
-        if count == 0:
+        # seed default workers on first run
+        if db.execute("SELECT COUNT(*) FROM kolegovia").fetchone()[0] == 0:
             db.executemany(
                 "INSERT INTO kolegovia (meno, farba) VALUES (?, ?)",
                 [
-                    ("Ján Novák", "#2563EB"),
-                    ("Mária Kováčová", "#DC2626"),
-                    ("Peter Horváth", "#16A34A"),
+                    ("Michálek", "#2563EB"),
+                    ("Kolaja",   "#DC2626"),
+                    ("Pokorný",  "#16A34A"),
+                    ("Hatala",   "#D97706"),
                 ],
             )
             db.commit()
+
+
+def ev_json(row):
+    d = dict(row)
+    return {
+        "id":         d["id"],
+        "typ":        d["typ"] or "ine",
+        "nazov":      d["nazov"],
+        "datum":      d["datum"],
+        "datumDo":    d["datum_do"],
+        "casOd":      d["cas_od"],
+        "casDo":      d["cas_do"],
+        "kolegaIds":  json.loads(d["kolega_ids"] or "[]"),
+        "zakaznikId": d["zakaznik_id"],
+        "meradlaIds": json.loads(d["meradla_ids"] or "[]"),
+        "autoZnacka": d["auto_znacka"],
+        "autoSpz":    d["auto_spz"],
+        "dohladTyp":  d["dohlad_typ"],
+        "miesto":     d["miesto"],
+        "popis":      d["popis"],
+    }
+
+
+def ev_params(d):
+    datum_do = d.get("datumDo") or None
+    if datum_do and datum_do <= (d.get("datum") or ""):
+        datum_do = None
+    return (
+        d.get("typ") or "ine",
+        (d.get("nazov") or "").strip() or None,
+        d.get("datum"),
+        datum_do,
+        d.get("casOd") or None,
+        d.get("casDo") or None,
+        json.dumps(d.get("kolegaIds") or []),
+        d.get("zakaznikId") or None,
+        json.dumps(d.get("meradlaIds") or []),
+        (d.get("autoZnacka") or "").strip() or None,
+        (d.get("autoSpz") or "").strip().upper() or None,
+        d.get("dohladTyp") or None,
+        (d.get("miesto") or "").strip() or None,
+        (d.get("popis") or "").strip() or None,
+    )
 
 
 @app.route("/")
@@ -66,11 +148,11 @@ def index():
     return render_template("index.html")
 
 
-# ── kolegovia ─────────────────────────────────────────────────────────────────
+# ── kolegovia ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/kolegovia", methods=["GET"])
 def get_kolegovia():
-    rows = get_db().execute("SELECT * FROM kolegovia ORDER BY meno").fetchall()
+    rows = get_db().execute("SELECT * FROM kolegovia ORDER BY id").fetchall()
     return jsonify([dict(r) for r in rows])
 
 
@@ -85,74 +167,107 @@ def add_kolega():
         (data["meno"].strip(), data.get("farba", "#2563EB")),
     )
     db.commit()
-    return jsonify({"id": cur.lastrowid, "meno": data["meno"], "farba": data.get("farba", "#2563EB")}), 201
+    return jsonify({"id": cur.lastrowid, "meno": data["meno"].strip(),
+                    "farba": data.get("farba", "#2563EB")}), 201
 
 
 @app.route("/api/kolegovia/<int:kid>", methods=["DELETE"])
 def delete_kolega(kid):
     db = get_db()
-    db.execute("UPDATE udalosti SET kolega_id = NULL WHERE kolega_id = ?", (kid,))
     db.execute("DELETE FROM kolegovia WHERE id = ?", (kid,))
     db.commit()
     return jsonify({"ok": True})
 
 
-# ── udalosti ──────────────────────────────────────────────────────────────────
+# ── zakaznici ──────────────────────────────────────────────────────────────────
+
+@app.route("/api/zakaznici", methods=["GET"])
+def get_zakaznici():
+    rows = get_db().execute("SELECT * FROM zakaznici ORDER BY nazov").fetchall()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route("/api/zakaznici", methods=["POST"])
+def add_zakaznik():
+    data = request.get_json()
+    if not data or not data.get("nazov"):
+        return jsonify({"error": "Názov je povinný"}), 400
+    db = get_db()
+    cur = db.execute(
+        "INSERT INTO zakaznici (nazov, ico) VALUES (?, ?)",
+        (data["nazov"].strip(), (data.get("ico") or "").strip() or None),
+    )
+    db.commit()
+    return jsonify({"id": cur.lastrowid, "nazov": data["nazov"].strip(),
+                    "ico": (data.get("ico") or "").strip() or None}), 201
+
+
+@app.route("/api/zakaznici/<int:zid>", methods=["DELETE"])
+def delete_zakaznik(zid):
+    db = get_db()
+    db.execute("UPDATE udalosti SET zakaznik_id = NULL WHERE zakaznik_id = ?", (zid,))
+    db.execute("DELETE FROM zakaznici WHERE id = ?", (zid,))
+    db.commit()
+    return jsonify({"ok": True})
+
+
+# ── meradla ────────────────────────────────────────────────────────────────────
+
+@app.route("/api/meradla", methods=["GET"])
+def get_meradla():
+    rows = get_db().execute("SELECT * FROM meradla ORDER BY nazov").fetchall()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route("/api/meradla", methods=["POST"])
+def add_meradlo():
+    data = request.get_json()
+    if not data or not data.get("nazov"):
+        return jsonify({"error": "Názov je povinný"}), 400
+    db = get_db()
+    cur = db.execute(
+        "INSERT INTO meradla (nazov, inv) VALUES (?, ?)",
+        (data["nazov"].strip(), (data.get("inv") or "").strip() or None),
+    )
+    db.commit()
+    return jsonify({"id": cur.lastrowid, "nazov": data["nazov"].strip(),
+                    "inv": (data.get("inv") or "").strip() or None}), 201
+
+
+@app.route("/api/meradla/<int:mid>", methods=["DELETE"])
+def delete_meradlo(mid):
+    db = get_db()
+    db.execute("DELETE FROM meradla WHERE id = ?", (mid,))
+    db.commit()
+    return jsonify({"ok": True})
+
+
+# ── udalosti ───────────────────────────────────────────────────────────────────
 
 @app.route("/api/udalosti", methods=["GET"])
 def get_udalosti():
-    rok = request.args.get("rok")
-    mesiac = request.args.get("mesiac")
-    db = get_db()
-    if rok and mesiac:
-        r, m = int(rok), int(mesiac)
-        first_day = f"{r:04d}-{m:02d}-01"
-        last_day_num = cal_module.monthrange(r, m)[1]
-        last_day = f"{r:04d}-{m:02d}-{last_day_num:02d}"
-        rows = db.execute(
-            """SELECT u.*, k.meno as kolega_meno, k.farba as kolega_farba
-               FROM udalosti u LEFT JOIN kolegovia k ON u.kolega_id = k.id
-               WHERE u.datum <= ? AND COALESCE(u.datum_do, u.datum) >= ?
-               ORDER BY u.datum, u.cas_od""",
-            (last_day, first_day),
-        ).fetchall()
-    else:
-        rows = db.execute(
-            """SELECT u.*, k.meno as kolega_meno, k.farba as kolega_farba
-               FROM udalosti u LEFT JOIN kolegovia k ON u.kolega_id = k.id
-               ORDER BY u.datum, u.cas_od"""
-        ).fetchall()
-    return jsonify([dict(r) for r in rows])
+    rows = get_db().execute(
+        "SELECT * FROM udalosti ORDER BY datum, cas_od"
+    ).fetchall()
+    return jsonify([ev_json(r) for r in rows])
 
 
 @app.route("/api/udalosti", methods=["POST"])
 def add_udalost():
     data = request.get_json()
-    if not data or not data.get("nazov") or not data.get("datum"):
-        return jsonify({"error": "Názov a dátum sú povinné"}), 400
-    datum_do = data.get("datum_do") or None
-    if datum_do and datum_do <= data["datum"]:
-        datum_do = None
+    if not data or not data.get("datum"):
+        return jsonify({"error": "Dátum je povinný"}), 400
     db = get_db()
     cur = db.execute(
-        "INSERT INTO udalosti (nazov, datum, datum_do, cas_od, cas_do, popis, kolega_id) VALUES (?,?,?,?,?,?,?)",
-        (
-            data["nazov"].strip(),
-            data["datum"],
-            datum_do,
-            data.get("cas_od") or None,
-            data.get("cas_do") or None,
-            data.get("popis", "").strip() or None,
-            data.get("kolega_id") or None,
-        ),
+        """INSERT INTO udalosti
+           (typ,nazov,datum,datum_do,cas_od,cas_do,kolega_ids,zakaznik_id,
+            meradla_ids,auto_znacka,auto_spz,dohlad_typ,miesto,popis)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        ev_params(data),
     )
     db.commit()
-    row = db.execute(
-        """SELECT u.*, k.meno as kolega_meno, k.farba as kolega_farba
-           FROM udalosti u LEFT JOIN kolegovia k ON u.kolega_id = k.id WHERE u.id=?""",
-        (cur.lastrowid,),
-    ).fetchone()
-    return jsonify(dict(row)), 201
+    row = db.execute("SELECT * FROM udalosti WHERE id=?", (cur.lastrowid,)).fetchone()
+    return jsonify(ev_json(row)), 201
 
 
 @app.route("/api/udalosti/<int:uid>", methods=["PUT"])
@@ -160,30 +275,17 @@ def update_udalost(uid):
     data = request.get_json()
     if not data:
         return jsonify({"error": "Žiadne dáta"}), 400
-    datum_do = data.get("datum_do") or None
-    if datum_do and datum_do <= data.get("datum", ""):
-        datum_do = None
     db = get_db()
     db.execute(
-        "UPDATE udalosti SET nazov=?, datum=?, datum_do=?, cas_od=?, cas_do=?, popis=?, kolega_id=? WHERE id=?",
-        (
-            data.get("nazov", "").strip(),
-            data.get("datum"),
-            datum_do,
-            data.get("cas_od") or None,
-            data.get("cas_do") or None,
-            data.get("popis", "").strip() or None,
-            data.get("kolega_id") or None,
-            uid,
-        ),
+        """UPDATE udalosti SET
+           typ=?,nazov=?,datum=?,datum_do=?,cas_od=?,cas_do=?,kolega_ids=?,
+           zakaznik_id=?,meradla_ids=?,auto_znacka=?,auto_spz=?,dohlad_typ=?,miesto=?,popis=?
+           WHERE id=?""",
+        ev_params(data) + (uid,),
     )
     db.commit()
-    row = db.execute(
-        """SELECT u.*, k.meno as kolega_meno, k.farba as kolega_farba
-           FROM udalosti u LEFT JOIN kolegovia k ON u.kolega_id = k.id WHERE u.id=?""",
-        (uid,),
-    ).fetchone()
-    return jsonify(dict(row))
+    row = db.execute("SELECT * FROM udalosti WHERE id=?", (uid,)).fetchone()
+    return jsonify(ev_json(row))
 
 
 @app.route("/api/udalosti/<int:uid>", methods=["DELETE"])
@@ -192,6 +294,72 @@ def delete_udalost(uid):
     db.execute("DELETE FROM udalosti WHERE id = ?", (uid,))
     db.commit()
     return jsonify({"ok": True})
+
+
+# ── bulk import ────────────────────────────────────────────────────────────────
+
+@app.route("/api/import", methods=["POST"])
+def import_data():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Žiadne dáta"}), 400
+
+    kol_list = data.get("kolegovia") or []
+    zak_list = data.get("zakaznici") or []
+    mer_list = data.get("meradla") or []
+    ev_list  = data.get("events") or []
+
+    db = get_db()
+    db.execute("DELETE FROM udalosti")
+    db.execute("DELETE FROM meradla")
+    db.execute("DELETE FROM zakaznici")
+    db.execute("DELETE FROM kolegovia")
+    try:
+        db.execute("DELETE FROM sqlite_sequence WHERE name IN "
+                   "('udalosti','meradla','zakaznici','kolegovia')")
+    except Exception:
+        pass
+
+    for k in kol_list:
+        db.execute("INSERT INTO kolegovia (id, meno, farba) VALUES (?,?,?)",
+                   (k.get("id"), k.get("meno", "?"), k.get("farba", "#2563EB")))
+
+    for z in zak_list:
+        db.execute("INSERT INTO zakaznici (id, nazov, ico) VALUES (?,?,?)",
+                   (z.get("id"), z.get("nazov", "?"), z.get("ico")))
+
+    for m in mer_list:
+        db.execute("INSERT INTO meradla (id, nazov, inv) VALUES (?,?,?)",
+                   (m.get("id"), m.get("nazov", "?"), m.get("inv")))
+
+    for ev in ev_list:
+        datum_do = ev.get("datumDo") or None
+        db.execute(
+            """INSERT INTO udalosti
+               (id,typ,nazov,datum,datum_do,cas_od,cas_do,kolega_ids,zakaznik_id,
+                meradla_ids,auto_znacka,auto_spz,dohlad_typ,miesto,popis)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                ev.get("id"),
+                ev.get("typ") or "ine",
+                ev.get("nazov"),
+                ev.get("datum"),
+                datum_do,
+                ev.get("casOd"),
+                ev.get("casDo"),
+                json.dumps(ev.get("kolegaIds") or []),
+                ev.get("zakaznikId"),
+                json.dumps(ev.get("meradlaIds") or []),
+                ev.get("autoZnacka"),
+                ev.get("autoSpz"),
+                ev.get("dohladTyp"),
+                ev.get("miesto"),
+                ev.get("popis"),
+            ),
+        )
+
+    db.commit()
+    return jsonify({"ok": True, "imported": len(ev_list)})
 
 
 if __name__ == "__main__":
