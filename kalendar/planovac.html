@@ -195,6 +195,44 @@ header h1{font-size:.85rem;font-weight:700;white-space:nowrap;}
 /* worker draggable hint */
 .kol-drag-hint{font-size:.6rem;color:#94A3B8;padding:2px 6px 4px;}
 
+/* REPORT */
+.rep-tabs{display:flex;gap:2px;padding:8px 13px 0;border-bottom:1px solid var(--border-light);background:#F8FAFC;flex-shrink:0;}
+.rep-tab{padding:7px 16px;font-size:.82rem;font-weight:700;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:6px 6px 0 0;}
+.rep-tab:hover{color:var(--text);}
+.rep-tab.active{color:var(--blue);border-bottom-color:var(--blue);background:var(--white);}
+.rep-ctrl{display:flex;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border-light);background:#FAFBFC;flex-shrink:0;flex-wrap:wrap;}
+.rep-ctrl label{font-size:.73rem;font-weight:700;color:var(--muted);text-transform:uppercase;}
+.rep-ctrl input[type=month]{border:1.5px solid var(--border);border-radius:6px;padding:4px 9px;font-size:.82rem;outline:none;font-family:inherit;}
+.rep-ctrl input[type=month]:focus{border-color:var(--blue);}
+.rep-wlabel{font-size:.86rem;font-weight:700;color:var(--text);}
+/* person section */
+.rep-person{margin-bottom:18px;}
+.rep-person-hdr{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:2px solid var(--border);margin-bottom:5px;}
+.rep-person-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.rep-person-name{font-size:.92rem;font-weight:800;color:var(--text);}
+.rep-person-count{font-size:.74rem;color:var(--muted);margin-left:auto;}
+.rep-ev-row{display:grid;grid-template-columns:105px 26px 1fr;gap:5px;align-items:start;padding:4px 6px;border-radius:5px;cursor:pointer;font-size:.8rem;}
+.rep-ev-row:hover{background:#EFF6FF;}
+.rep-ev-date{color:var(--muted);font-weight:600;font-size:.77rem;padding-top:2px;}
+.rep-ev-icon{text-align:center;padding-top:1px;}
+.rep-ev-main{display:flex;flex-direction:column;gap:2px;}
+.rep-ev-title{font-weight:600;color:var(--text);line-height:1.3;}
+.rep-ev-sub{font-size:.73rem;color:var(--muted);line-height:1.4;}
+/* week section */
+.rep-day-block{margin-bottom:12px;}
+.rep-day-hdr{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#1E293B;padding:5px 9px;background:#F1F5F9;border-radius:6px;margin-bottom:5px;}
+.rep-day-hdr.we{color:var(--red);background:#FEF2F2;}
+.rep-day-hdr.tod{color:var(--blue);background:#EFF6FF;}
+.rep-week-ev{display:grid;grid-template-columns:26px 1fr 110px 68px;gap:5px;align-items:center;padding:4px 8px;border-radius:5px;cursor:pointer;font-size:.8rem;}
+.rep-week-ev:hover{background:#EFF6FF;}
+.rep-persons-mini{display:flex;gap:3px;flex-wrap:wrap;}
+.rep-person-mini{color:#fff;border-radius:10px;padding:2px 8px;font-size:.7rem;font-weight:700;}
+.rep-time-cell{font-size:.73rem;color:var(--muted);text-align:right;}
+.rep-empty-day{font-size:.75rem;color:#CBD5E0;padding:2px 9px;}
+.rep-no-data{color:var(--muted);text-align:center;padding:28px;font-size:.86rem;}
+.btn-print{background:#16A34A;color:#fff;border:none;border-radius:7px;padding:6px 13px;font-size:.78rem;font-weight:700;cursor:pointer;}
+.btn-print:hover{background:#15803D;}
+
 @media(max-width:700px){
   html,body{overflow:auto;}
   .main{flex-direction:column;}
@@ -213,6 +251,7 @@ header h1{font-size:.85rem;font-weight:700;white-space:nowrap;}
   <h1>📋 Plánovač aktivít</h1>
   <div class="hdr-right">
     <button class="btn-hdr" onclick="openAutoPrehlad()">🚗 Vozidlá</button>
+    <button class="btn-hdr" onclick="openReport()">📊 Report</button>
     <button class="btn-hdr" onclick="toggleSidebar()">☰</button>
     <button class="btn-new" onclick="openNew()">+ Nová udalosť</button>
   </div>
@@ -356,6 +395,25 @@ header h1{font-size:.85rem;font-weight:700;white-space:nowrap;}
       <button class="bs" onclick="closeM()">Zrušiť</button>
       <button class="bp" onclick="saveEv()">Uložiť</button>
     </div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="overlay" id="ovReport" onclick="if(event.target===this)closeReport()">
+  <div class="modal" style="max-width:880px;width:100%;max-height:93vh;">
+    <div class="mhdr">
+      <h3>📊 Reporty</h3>
+      <div style="display:flex;gap:7px;align-items:center;">
+        <button class="btn-print" onclick="printReport()">🖨️ Tlačiť / PDF</button>
+        <button class="mx" onclick="closeReport()">✕</button>
+      </div>
+    </div>
+    <div class="rep-tabs">
+      <button class="rep-tab active" id="tabPeople" onclick="switchRepTab('people')">👤 Ľudia</button>
+      <button class="rep-tab" id="tabWeek" onclick="switchRepTab('week')">📅 Týždeň</button>
+    </div>
+    <div class="rep-ctrl" id="repCtrl"></div>
+    <div class="mbody" id="repBody" style="padding:12px 15px;"></div>
   </div>
 </div>
 
@@ -878,6 +936,196 @@ function delMeradlo(id){
   save(K_ME,meradla);save(K_EV,events);render();
 }
 
+// ── REPORT ────────────────────────────────────────────────────────────────────
+let repTab='people',repMonthVal='',repWeekStart='';
+
+function addDays(dStr,n){const d=new Date(dStr+'T12:00:00');d.setDate(d.getDate()+n);return ds(d);}
+function getWeekStartStr(d){const t=new Date(d);const day=t.getDay();t.setDate(t.getDate()+(day===0?-6:1-day));return ds(t);}
+
+function openReport(){
+  const now=new Date();
+  repMonthVal=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  repWeekStart=getWeekStartStr(now);
+  document.getElementById('tabPeople').classList.add('active');
+  document.getElementById('tabWeek').classList.remove('active');
+  repTab='people';
+  renderRepCtrl();renderReport();
+  document.getElementById('ovReport').classList.add('open');
+}
+function closeReport(){document.getElementById('ovReport').classList.remove('open');}
+
+function switchRepTab(tab){
+  repTab=tab;
+  document.getElementById('tabPeople').classList.toggle('active',tab==='people');
+  document.getElementById('tabWeek').classList.toggle('active',tab==='week');
+  renderRepCtrl();renderReport();
+}
+
+function renderRepCtrl(){
+  const c=document.getElementById('repCtrl');
+  if(repTab==='people'){
+    c.innerHTML=`<label>Mesiac:</label><input type="month" value="${repMonthVal}" onchange="repMonthVal=this.value;renderReport()">`;
+  } else {
+    const wEnd=addDays(repWeekStart,6);
+    const wNum=getISOWeek(new Date(repWeekStart+'T12:00:00'));
+    c.innerHTML=`
+      <button class="nav-btn" onclick="repWeekStart=addDays(repWeekStart,-7);renderRepCtrl();renderReport()">‹</button>
+      <span class="rep-wlabel">Týždeň ${wNum} &nbsp;(${fmtD(repWeekStart)} – ${fmtD(wEnd)})</span>
+      <button class="nav-btn" onclick="repWeekStart=addDays(repWeekStart,7);renderRepCtrl();renderReport()">›</button>`;
+  }
+}
+
+function renderReport(){
+  if(repTab==='people')renderPeopleReport();else renderWeekReport();
+}
+
+function renderPeopleReport(){
+  const body=document.getElementById('repBody');body.innerHTML='';
+  if(!repMonthVal)return;
+  const [yr,mo]=repMonthVal.split('-').map(Number);
+  const first=`${repMonthVal}-01`,last=ds(new Date(yr,mo,0));
+  const monthEvs=events.filter(ev=>{const s=ev.datum,en=ev.datumDo||ev.datum;return s<=last&&en>=first;});
+  const DAYS_S=['Ne','Po','Ut','St','Št','Pi','So'];
+  let hasAny=false;
+
+  function buildEvRow(ev,showPersons){
+    const typ=getTyp(ev.typ);
+    const z=ev.zakaznikId?zById(ev.zakaznikId):null;
+    const d=new Date(ev.datum+'T12:00:00');
+    let dateStr=DAYS_S[d.getDay()]+' '+fmtD(ev.datum);
+    if(ev.datumDo&&ev.datumDo!==ev.datum)dateStr+=' –\n'+fmtD(ev.datumDo);
+    const subtyp=(ev.typ==='dohlad'&&ev.dohladTyp)?ev.dohladTyp:'';
+    let sub=[];
+    if(ev.miesto)sub.push('📍 '+ev.miesto);
+    if(z)sub.push('🏢 '+z.nazov);
+    if(ev.casOd){let t=ev.casOd.slice(0,5);if(ev.casDo)t+=' – '+ev.casDo.slice(0,5);sub.push('🕐 '+t);}
+    const mList=(ev.meradlaIds||[]).map(id=>mById(id)).filter(Boolean);
+    if(mList.length)sub.push('🔬 '+mList.map(m=>m.nazov).join(', '));
+    if(ev.autoSpz)sub.push('🚗 '+ev.autoSpz);
+    if(showPersons){const ps=evPersonNames(ev);if(ps)sub.push('👤 '+ps);}
+    const row=document.createElement('div');row.className='rep-ev-row';
+    row.onclick=()=>{closeReport();openEdit(ev.id);};
+    const title=typ.label.replace('\n',' ')+(subtyp?' · '+subtyp:'')+(ev.nazov?' – '+ev.nazov:'');
+    row.innerHTML=`<span class="rep-ev-date">${dateStr}</span><span class="rep-ev-icon">${typ.ikona}</span><div class="rep-ev-main"><span class="rep-ev-title">${title}</span>${sub.length?'<span class="rep-ev-sub">'+sub.join(' · ')+'</span>':''}</div>`;
+    return row;
+  }
+
+  kolegovia.forEach(k=>{
+    const kEvs=monthEvs.filter(ev=>(ev.kolegaIds||[]).includes(k.id)).sort((a,b)=>a.datum.localeCompare(b.datum));
+    if(!kEvs.length)return;
+    hasAny=true;
+    const sec=document.createElement('div');sec.className='rep-person';
+    const hdr=document.createElement('div');hdr.className='rep-person-hdr';
+    hdr.innerHTML=`<span class="rep-person-dot" style="background:${k.farba}"></span><span class="rep-person-name">${k.meno}</span><span class="rep-person-count">${kEvs.length} udalost${kEvs.length===1?'':'í'}</span>`;
+    sec.appendChild(hdr);
+    kEvs.forEach(ev=>sec.appendChild(buildEvRow(ev,false)));
+    body.appendChild(sec);
+  });
+
+  const unassigned=monthEvs.filter(ev=>!(ev.kolegaIds&&ev.kolegaIds.length)).sort((a,b)=>a.datum.localeCompare(b.datum));
+  if(unassigned.length){
+    hasAny=true;
+    const sec=document.createElement('div');sec.className='rep-person';
+    const hdr=document.createElement('div');hdr.className='rep-person-hdr';
+    hdr.innerHTML=`<span class="rep-person-dot" style="background:#CBD5E0"></span><span class="rep-person-name" style="color:var(--muted)">Nepriradené</span><span class="rep-person-count">${unassigned.length}</span>`;
+    sec.appendChild(hdr);
+    unassigned.forEach(ev=>sec.appendChild(buildEvRow(ev,false)));
+    body.appendChild(sec);
+  }
+  if(!hasAny){const em=document.createElement('p');em.className='rep-no-data';em.textContent='Žiadne udalosti v tomto mesiaci.';body.appendChild(em);}
+}
+
+function renderWeekReport(){
+  const body=document.getElementById('repBody');body.innerHTML='';
+  const DAYS_FULL=['Pondelok','Utorok','Streda','Štvrtok','Piatok','Sobota','Nedeľa'];
+  const ts=tds();
+  for(let i=0;i<7;i++){
+    const dStr=addDays(repWeekStart,i);
+    const d=new Date(dStr+'T12:00:00');
+    const dayEvs=events.filter(ev=>{const s=ev.datum,en=ev.datumDo||ev.datum;return s<=dStr&&en>=dStr;}).sort((a,b)=>(a.casOd||'').localeCompare(b.casOd||''));
+    const blk=document.createElement('div');blk.className='rep-day-block';
+    const hdr=document.createElement('div');
+    hdr.className='rep-day-hdr'+(i>=5?' we':'')+(dStr===ts?' tod':'');
+    hdr.textContent=DAYS_FULL[i]+', '+d.getDate()+'. '+(d.getMonth()+1)+'. '+d.getFullYear();
+    blk.appendChild(hdr);
+    if(!dayEvs.length){
+      const em=document.createElement('div');em.className='rep-empty-day';em.textContent='žiadne udalosti';blk.appendChild(em);
+    } else {
+      dayEvs.forEach(ev=>{
+        const typ=getTyp(ev.typ);
+        const persons=(ev.kolegaIds||[]).map(id=>kById(id)).filter(Boolean);
+        const z=ev.zakaznikId?zById(ev.zakaznikId):null;
+        const subtyp=(ev.typ==='dohlad'&&ev.dohladTyp)?ev.dohladTyp:'';
+        let timeStr='';if(ev.casOd)timeStr=ev.casOd.slice(0,5);if(ev.casDo)timeStr+=' – '+ev.casDo.slice(0,5);
+        let sub=[];
+        if(ev.miesto)sub.push('📍 '+ev.miesto);
+        if(z)sub.push('🏢 '+z.nazov);
+        if(ev.autoSpz)sub.push('🚗 '+ev.autoSpz);
+        const personHtml=persons.map(p=>`<span class="rep-person-mini" style="background:${p.farba}">${p.meno}</span>`).join('');
+        const title=typ.label.replace('\n',' ')+(subtyp?' · '+subtyp:'')+(ev.nazov?' – '+ev.nazov:'');
+        const row=document.createElement('div');row.className='rep-week-ev';
+        row.onclick=()=>{closeReport();openEdit(ev.id);};
+        row.innerHTML=`<span style="font-size:1.05rem;text-align:center;">${typ.ikona}</span><div class="rep-ev-main"><span class="rep-ev-title">${title}</span>${sub.length?'<span class="rep-ev-sub">'+sub.join(' · ')+'</span>':''}</div><div class="rep-persons-mini">${personHtml||'<span style="color:#CBD5E0;font-size:.75rem;">—</span>'}</div><span class="rep-time-cell">${timeStr}</span>`;
+        blk.appendChild(row);
+      });
+    }
+    body.appendChild(blk);
+  }
+}
+
+function printReport(){
+  let headerStr='';
+  if(repTab==='people'){
+    const [yr,mo]=repMonthVal.split('-').map(Number);
+    headerStr='👤 Ľudia – '+MONTHS[mo-1]+' '+yr;
+  } else {
+    const wEnd=addDays(repWeekStart,6);
+    const wNum=getISOWeek(new Date(repWeekStart+'T12:00:00'));
+    headerStr='📅 Týždeň '+wNum+' ('+fmtD(repWeekStart)+' – '+fmtD(wEnd)+')';
+  }
+  const content=document.getElementById('repBody').innerHTML;
+  const win=window.open('','_blank','width=960,height=750');
+  if(!win){alert('Povoľte otváranie okien v prehliadači.');return;}
+  win.document.write(`<!DOCTYPE html><html lang="sk"><head>
+<meta charset="UTF-8"><title>Report – ${headerStr}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:#1A202C;padding:22px 28px;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+h1{font-size:1rem;font-weight:800;color:#1E293B;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #E2E8F0;}
+/* person */
+.rep-person{margin-bottom:16px;}
+.rep-person-hdr{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:2px solid #E2E8F0;margin-bottom:5px;}
+.rep-person-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.rep-person-name{font-size:.9rem;font-weight:800;}
+.rep-person-count{font-size:.72rem;color:#6B7280;margin-left:auto;}
+.rep-ev-row{display:grid;grid-template-columns:100px 24px 1fr;gap:5px;align-items:start;padding:3px 5px;border-radius:4px;font-size:.78rem;}
+.rep-ev-row:nth-child(even){background:#F8FAFC;}
+.rep-ev-date{color:#6B7280;font-weight:600;font-size:.73rem;}
+.rep-ev-icon{text-align:center;}
+.rep-ev-main{display:flex;flex-direction:column;gap:1px;}
+.rep-ev-title{font-weight:600;color:#1A202C;}
+.rep-ev-sub{font-size:.7rem;color:#6B7280;}
+/* week */
+.rep-day-block{margin-bottom:12px;}
+.rep-day-hdr{font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#1E293B;padding:4px 8px;background:#F1F5F9;border-radius:4px;margin-bottom:4px;}
+.rep-day-hdr.we{color:#DC2626;background:#FEF2F2;}
+.rep-day-hdr.tod{color:#2563EB;background:#EFF6FF;}
+.rep-week-ev{display:grid;grid-template-columns:24px 1fr 110px 65px;gap:5px;align-items:center;padding:3px 8px;border-radius:4px;font-size:.78rem;}
+.rep-week-ev:nth-child(even){background:#F8FAFC;}
+.rep-persons-mini{display:flex;gap:3px;flex-wrap:wrap;}
+.rep-person-mini{color:#fff;border-radius:8px;padding:1px 7px;font-size:.67rem;font-weight:700;}
+.rep-empty-day{font-size:.72rem;color:#CBD5E0;padding:2px 8px;}
+.rep-time-cell{font-size:.7rem;color:#6B7280;text-align:right;}
+.rep-no-data{color:#6B7280;text-align:center;padding:24px;font-size:.84rem;}
+@media print{body{padding:10mm 12mm;}@page{margin:10mm;}}
+</style></head><body>
+<h1>${headerStr}</h1>
+${content}
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`);
+  win.document.close();
+}
+
 // ── DAY DETAIL ────────────────────────────────────────────────────────────────
 function openDayDetail(dStr){
   currentDetailDate=dStr;
@@ -926,7 +1174,7 @@ function openNewPrefilledKolega(kid,dateStr){openNew(dateStr);selPersonIds=[kid]
 // ── NAV ───────────────────────────────────────────────────────────────────────
 function chM(d){curM+=d;if(curM<0){curM=11;curY--;}if(curM>11){curM=0;curY++;}render();}
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('hidden');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();closeDayDetail();document.getElementById('ovAuto').classList.remove('open');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();closeDayDetail();closeReport();document.getElementById('ovAuto').classList.remove('open');}});
 
 render();
 </script>
